@@ -1,0 +1,40 @@
+/* style.css */
+
+/* Background for the entire app */
+body {
+  font-family: Arial, sans-serif;
+}
+
+/* Styling for the navbar */
+nav.navbar {
+  border-bottom: 2px solid #ccc;
+}
+
+/* Card styling for login/register and dashboards */
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Button styling */
+.btn {
+  border-radius: 25px;
+}
+
+/* Spacing between elements */
+.mt-5 {
+  margin-top: 50px;
+}
+
+/* Text color for error messages */
+.text-danger {
+  font-weight: bold;
+  color: red;
+}
+
+/* Success message */
+.text-success {
+  font-weight: bold;
+  color: green;
+}

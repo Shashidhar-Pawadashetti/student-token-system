@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">🎓 Student Dashboard</h2>
+
+    <!--  -->
+    <!-- Add this navbar code inside <body> -->
+<nav class="navbar navbar-expand-lg navbar-light bg-primary">
+  <div class="container-fluid">
+    <a class="navbar-brand text-white" href="#">Student Token System</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link text-white" href="studentDashboard.html">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="login.html" onclick="logout()">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    
+    <div class="card mx-auto" style="max-width: 500px;">
+      <div class="card-body">
+        <h4>Welcome, <span id="studentName"></span>!</h4>
+        <p>Your Token Balance: <strong><span id="tokenBalance">0</span></strong></p>
+
+        <form id="redeemForm">
+          <div class="mb-3">
+            <label for="amount">Redeem Tokens:</label>
+            <input type="number" class="form-control" id="amount" min="1" required />
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Redeem</button>
+        </form>
+
+        <div id="message" class="text-success mt-3 text-center"></div>
+        <div id="error" class="text-danger mt-2 text-center"></div>
+        <button class="btn btn-outline-secondary mt-4 w-100" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    // Get student info
+    async function loadStudentData() {
+      try {
+        const res = await fetch('http://localhost:5000/api/tokens/balance', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Failed to fetch balance');
+
+        document.getElementById('studentName').textContent = data.name || 'Student';
+        document.getElementById('tokenBalance').textContent = data.balance;
+      } catch (err) {
+        document.getElementById('error').textContent = err.message;
+      }
+    }
+
+    document.getElementById('redeemForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById('amount').value);
+
+      try {
+        const res = await fetch('http://localhost:5000/api/tokens/redeem', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ amount }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Redemption failed');
+
+        document.getElementById('message').textContent = data.msg || 'Tokens redeemed!';
+        document.getElementById('tokenBalance').textContent = data.balance;
+        document.getElementById('amount').value = '';
+      } catch (err) {
+        document.getElementById('error').textContent = err.message;
+      }
+    });
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    loadStudentData();
+  </script>
+</body>
+</html>

@@ -1,34 +1,60 @@
 const express = require('express');
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
 const User = require('../models/User');
-const Transaction = require('../models/Transaction');
+const auth = require('../middleware/auth'); // JWT middleware
 
 const router = express.Router();
 
-// Faculty issues tokens to a student
-router.post('/issue', auth, roleCheck('faculty'), async (req, res) => {
-    const { studentId, amount, reason } = req.body;
+// 🔐 Issue tokens (faculty only)
+router.post('/issue', auth, async (req, res) => {
+    if (req.user.role !== 'faculty') {
+        return res.status(403).json({ msg: 'Only faculty can issue tokens' });
+    }
+
+    const { studentEmail, amount } = req.body;
 
     try {
-        const student = await User.findById(studentId);
-        if (!student || student.role !== 'student') {
-            return res.status(404).json({ msg: 'Student not found' });
-        }
+        const student = await User.findOne({ email: studentEmail, role: 'student' });
+        if (!student) return res.status(404).json({ msg: 'Student not found' });
 
-        student.tokens += amount;
+        student.tokens += Number(amount);
         await student.save();
 
-        const tx = new Transaction({
-            from: req.user.id,
-            to: studentId,
-            amount,
-            reason
-        });
+        res.json({ msg: `Issued ${amount} tokens to ${student.name}`, tokens: student.tokens });
+    } catch (err) {
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
 
-        await tx.save();
+// 🎁 Redeem tokens (students)
+router.post('/redeem', auth, async (req, res) => {
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ msg: 'Only students can redeem tokens' });
+    }
 
-        res.json({ msg: 'Tokens issued successfully', tokens: student.tokens });
+    const { amount } = req.body;
+
+    try {
+        const student = await User.findById(req.user.id);
+        if (!student) return res.status(404).json({ msg: 'Student not found' });
+
+        if (student.tokens < amount) {
+            return res.status(400).json({ msg: 'Insufficient tokens' });
+        }
+
+        student.tokens -= amount;
+        await student.save();
+
+        res.json({ msg: `Redeemed ${amount} tokens`, tokens: student.tokens });
+    } catch (err) {
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// 🔍 Get current token balance
+router.get('/balance', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        res.json({ tokens: user.tokens });
     } catch (err) {
         res.status(500).json({ msg: 'Server error' });
     }
