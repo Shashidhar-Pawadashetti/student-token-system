@@ -13,6 +13,7 @@ nav.navbar {
 /* Card styling for login/register and dashboards */
 .card {
   border: none;
+  background-color: #f0f2f5;
   border-radius: 10px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -37,4 +38,10 @@ nav.navbar {
 .text-success {
   font-weight: bold;
   color: green;
+}
+.logo-img-login{
+  width: 70px;
+  height: 70px;
+  margin: auto;
+  display: block;
 }
